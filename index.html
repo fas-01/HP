@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fasly</title>
+    <style>
+        /* =========================================
+           全体の基本設定
+           ========================================= */
+        body {
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f8f9fa; /* 通常ページ部分の背景色（薄いグレー） */
+            color: #333;
+            /* 以前あった overflow: hidden; はスクロールさせるために削除しました */
+        }
+
+        /* =========================================
+           トップの波紋エリア（ファーストビュー）
+           ========================================= */
+        .hero-area {
+            position: relative;
+            width: 100%;
+            height: 100vh; /* 画面の高さいっぱいに広げる */
+            background: radial-gradient(circle at center, #72c7ff 0%, #09e6ff 100%);
+            overflow: hidden; /* 波紋がエリア外にはみ出ないようにする */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* 波紋エリアの上にのせるテキスト */
+        .hero-title {
+            position: relative;
+            z-index: 100; /* 波紋より上に表示 */
+            color: white;
+            font-size: 3rem;
+            letter-spacing: 0.2em;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            pointer-events: none; /* テキストがマウス操作の邪魔をしないようにする */
+            margin: 0;
+        }
+
+        .hero-subtitle {
+            position: relative;
+            z-index: 10;
+            color: white;
+            margin-top: 10px;
+            font-size: 1rem;
+            opacity: 0.9;
+            pointer-events: none;
+        }
+
+        /* =========================================
+           波紋のデザイン
+           ========================================= */
+        .ripple {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 43% 57% 49% 51% / 44% 52% 48% 56%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            will-change: transform, opacity;
+            animation: ripple-yurayura 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            z-index: 1; /* テキストより奥、背景より手前に配置 */
+        }
+
+        .ripple.inner {
+            border-radius: 54% 46% 41% 59% / 51% 58% 42% 49%;
+            animation-duration: 2s; 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes ripple-yurayura {
+            0% { opacity: 0.7; transform: translate(-50%, -50%) rotate(0deg) scale(0); }
+            100% { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(1); }
+        }
+
+        /* =========================================
+           浮遊ソーシャルボタン（テンプレート）
+           ========================================= */
+        .social-float-area {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .social-buttons {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .social-button-item {
+            position: absolute;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            will-change: transform;
+            pointer-events: auto;
+            top: 0;
+            left: 0;
+        }
+
+        .social-action-btn {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(234, 249, 255, 0.85));
+            color: #0f3552;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+
+        .social-icon {
+            width: 26px;
+            height: 26px;
+            display: block;
+            fill: currentColor;
+        }
+
+        .social-icon-stroke {
+            width: 26px;
+            height: 26px;
+            display: block;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .social-icon-embed {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .social-action-btn.leaf-style {
+            border-radius: 52% 48% 58% 42% / 44% 56% 44% 56%;
+            position: relative;
+        }
+
+        .social-action-btn.leaf-style::after {
+            content: '';
+            position: absolute;
+            inset: 7px;
+            border-radius: 50%;
+            border: 1px solid rgba(15, 53, 82, 0.08);
+            pointer-events: none;
+        }
+
+        .social-action-btn:hover {
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+        }
+
+        .social-action-btn:active {
+            transform: scale(0.93);
+        }
+
+        .social-action-btn:focus-visible {
+            outline: 3px solid #ffe978;
+            outline-offset: 2px;
+        }
+
+        /* =========================================
+           ポップアップ（テンプレート）
+           ========================================= */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 23, 34, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            z-index: 100;
+            padding: 18px;
+        }
+
+        .popup-overlay.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-card {
+            width: min(440px, 100%);
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 22px 22px 18px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+            transform: translateY(10px) scale(0.96);
+            transition: transform 0.25s ease;
+        }
+
+        .popup-overlay.is-open .popup-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .popup-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .popup-title {
+            margin: 0;
+            color: #133b5b;
+        }
+
+        .popup-body {
+            margin: 0;
+            line-height: 1.65;
+            color: #264c67;
+        }
+
+        .popup-close-btn {
+            border: none;
+            background: #e9f4fb;
+            color: #143e5f;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .popup-close-btn:hover {
+            background: #d7eaf7;
+        }
+
+        @media (max-width: 700px) {
+            .social-float-area {
+                width: 100%;
+                height: 100%;
+            }
+
+            .social-button-item {
+                width: 50px;
+                height: 50px;
+            }
+
+            .social-action-btn {
+                font-size: 1rem;
+            }
+
+            .social-icon,
+            .social-icon-stroke {
+                width: 22px;
+                height: 22px;
+            }
+        }
+
+        /* =========================================
+           通常コンテンツエリア（スクロールして下に出てくる部分）
+           ========================================= */
+        .content-area {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 50px;
+            color: #2c3e50;
+        }
+
+        /* カード型レイアウト（いい感じの装飾） */
+        .card-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap; /* 画面が狭いと折り返す */
+        }
+
+        .card {
+            background: white;
+            flex: 1;
+            min-width: 250px;
+            padding: 40px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); /* ふんわりとした影 */
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px); /* マウスを乗せると少し浮くエフェクト */
+        }
+
+        .card h3 {
+            color: #09e6ff; /* 波紋の色に合わせてアクセントカラーに */
+            margin-top: 0;
+        }
+
+        /* フッター */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero-area" id="hero">
+        <h1 class="hero-title">FASLY</h1>
+        <p class="hero-subtitle">Scroll down to discover more</p>
+
+        <!-- =========================================
+             テンプレート本体
+             ここを複製して増やす: social-button-item
+               ここに情報を入れる: data-type / data-target / aria-label / SVGアイコン
+             ========================================= -->
+        <div class="social-float-area" aria-label="ソーシャルアクション">
+            <div class="social-float-ring"></div>
+            <ul class="social-buttons">
+                <!-- =========================================
+                     1. popup型テンプレート
+                     増やし方: この li を複製
+                     入れる情報:
+                     - aria-label: ボタンの説明
+                     - data-target: 開くポップアップの id（#popup-xxx）
+                     - button内SVG: 表示するアイコン
+                     ========================================= -->
+                <li class="social-button-item">
+                    <button
+                        type="button"
+                        class="social-action-btn leaf-style"
+                        aria-label="Xプロフィールを表示"
+                        data-type="popup"
+                        data-target="#popup-x"
+                    >
+                        <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M18.146 2H21.5l-7.334 8.38L22.794 22h-6.753l-5.29-6.918L4.699 22H1.343l7.846-8.96L.794 2h6.925l4.782 6.322L18.146 2z"></path>
+                        </svg>
+                    </button>
+                </li>
+
+                <!-- =========================================
+                     2. link型テンプレート
+                     増やし方: この li を複製
+                     入れる情報:
+                     - aria-label: ボタンの説明
+                     - data-target: 遷移先URL
+                     - button内SVG: 表示するアイコン
+                     ========================================= -->
+                <li class="social-button-item">
+                    <button
+                        type="button"
+                        class="social-action-btn leaf-style"
+                        aria-label="GitHubへ移動"
+                        data-type="link"
+                        data-target="https://github.com/fas-01"
+                    >
+                        <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M12 1.5C6.2 1.5 1.5 6.3 1.5 12.2c0 4.7 3.1 8.7 7.3 10.1.5.1.7-.2.7-.5v-1.9c-3 .7-3.7-1.3-3.7-1.3-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 .1.6 2.2 3 2.3.3-.7.4-1.2.7-1.4-2.4-.3-5-1.2-5-5.3 0-1.2.4-2.1 1.1-2.9-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 .1a10.2 10.2 0 0 1 5.5 0c2.1-.4 3-.1 3-.1.6 1.5.2 2.6.1 2.9.7.8 1.1 1.7 1.1 2.9 0 4.1-2.6 5-5.1 5.3.4.3.8 1 .8 2.1v3.1c0 .3.2.6.7.5a10.7 10.7 0 0 0 7.3-10.1C22.5 6.3 17.8 1.5 12 1.5z"></path>
+                        </svg>
+                    </button>
+                </li>
+
+                <li class="social-button-item">
+                    <button
+                        type="button"
+                        class="social-action-btn leaf-style"
+                        aria-label="noteへ移動"
+                        data-type="link"
+                        data-target="https://note.com/fasly"
+                    >
+                        <!-- 添付SVGを使う場合はこの形で貼り付ける -->
+                        <svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M105.251 215.151C90.5437 214.742 69.9529 215.559 55 215.559V292.039H76.4079V234.189C76.4079 234.189 95.4463 233.535 102.31 234.352C108.765 235.088 111.135 239.092 111.38 247.426C111.543 256.904 111.38 261.889 111.38 292.039H132.788C132.788 292.039 133.033 257.558 132.788 245.547C132.461 224.22 125.025 215.641 105.251 215.151Z" fill="black"/>
+<path d="M204.283 214.906C183.121 214.906 165.88 232.228 165.88 253.554C165.88 274.881 183.121 292.203 204.283 292.203C225.446 292.203 242.687 274.881 242.687 253.554C242.687 232.228 225.446 214.906 204.283 214.906ZM204.283 273.737C193.171 273.737 184.183 264.667 184.183 253.473C184.183 242.278 193.171 233.209 204.283 233.209C215.396 233.209 224.384 242.278 224.384 253.473C224.384 264.749 215.396 273.737 204.283 273.737Z" fill="black"/>
+<path d="M445 253.554C445 232.228 427.759 214.906 406.596 214.906C385.434 214.906 368.193 232.228 368.193 253.554C368.193 266.056 373.913 276.76 382.819 283.869C389.029 288.771 397.69 292.203 409.293 292.203C414.931 292.203 429.557 290.651 440.097 278.966L431.436 267.363C427.759 270.632 418.526 275.207 411.172 275.207C401.857 275.207 396.219 273.41 392.134 269.569C389.601 267.282 387.803 263.768 386.986 259.438H444.428C444.755 257.476 445 255.597 445 253.554ZM387.15 246.527C389.274 237.458 395.647 230.757 406.515 230.757C417.872 230.757 423.837 237.948 425.798 246.527H387.15Z" fill="black"/>
+<path d="M315.408 207.797H295.39V229.287H274.799V248.08H295.39V270.387H315.408V248.08H335.999V229.287H315.408V207.797Z" fill="black"/>
+</svg>
+                    </button>
+                </li>
+
+                <li class="social-button-item">
+                    <button
+                        type="button"
+                        class="social-action-btn leaf-style"
+                        aria-label="Makerworldへ移動"
+                        data-type="link"
+                        data-target="https://makerworld.com/@fasly?appsharePlatform=copy"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="-7 -7 55 55" >
+                            <!-- viewBoxを広げて、拡大時に四角くクリップされるのを防ぐ -->
+                            <g transform="scale(1.5)">
+                                <path d="M27.2867 2.68142L20.8492 0.160571L20.4386 0L20.0257 0.160571L13.9977 2.51861L7.96978 0.160571L7.56139 0L7.15188 0.160571L0.713275 2.68142L0 2.96102V25.0401L0.713275 25.3186L7.15188 27.8394L7.56139 28L7.97091 27.8394L14 25.4814L20.028 27.8394L20.4386 28L20.8492 27.8394L27.2867 25.3186L28 25.0401V2.96102L27.2867 2.68142ZM20.4386 1.20372L26.8772 3.7257V12.8356L20.4386 10.3158V1.20372ZM14.4095 13.8787L20.4386 11.5207L26.4677 13.8787L26.7748 13.9989L26.4677 14.119L20.4386 16.4771L14.4095 14.119L14.1024 13.9989L14.4095 13.8787ZM7.56139 1.20372L14 3.7257V12.8356L7.56139 10.3147V1.20372ZM1.53343 13.8787L7.56139 11.5207L13.5905 13.8787L13.8976 13.9989L13.5905 14.119L7.56139 16.4771L1.53343 14.119L1.22629 13.9989L1.53343 13.8787ZM1.12504 24.2732V15.1588L7.56365 17.6785V26.7895L1.12504 24.2732ZM14.0022 24.2732V15.1588L20.4409 17.6785V26.7895L14.0022 24.2732Z" fill="currentColor"/>
+                            </g>
+                        </svg>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+<!--
+    <main class="content-area">
+        <h2 class="section-title">OUR SERVICES</h2>
+        
+        <div class="card-container">
+            <div class="card">
+                <h3>Web Design</h3>
+                <p>最新の技術と美しいデザインで、魅力的なWebサイトを構築します。</p>
+            </div>
+            <div class="card">
+                <h3>UI/UX</h3>
+                <p>ユーザーが直感的に操作でき、心地よい体験ができるインターフェースを設計します。</p>
+            </div>
+            <div class="card">
+                <h3>APP</h3>
+                <p>よりよい未来へ、変えていきます</p>
+            </div>
+        </div>
+    </main>
+-->
+    <footer>
+        <p>&copy; 2026 Fasly. All Rights Reserved.</p>
+    </footer>
+
+    <!-- =========================================
+         popup本体テンプレート
+         増やし方: この div を複製して id を変える
+         入れる情報:
+         - id: ボタンの data-target と一致させる
+         - title: ポップアップの見出し
+         - body: 表示したい説明文やリンク情報
+         ========================================= -->
+    <div class="popup-overlay" id="popup-x" aria-hidden="true">
+        <article class="popup-card" role="dialog" aria-modal="true" aria-labelledby="popup-x-title">
+            <div class="popup-head">
+                <h3 class="popup-title" id="popup-x-title">X</h3>
+                <button type="button" class="popup-close-btn" aria-label="ポップアップを閉じる">&times;</button>
+            </div>
+            <p class="popup-body">
+                <a href="https://x.com/fasly18831617?s=21" target="_blank" rel="noopener noreferrer">X</a> へアクセスして、最新の投稿や情報をチェックしてください！<br>
+            </p>
+        </article>
+    </div>
+
+    <script>
+        // 波紋エフェクトのJavaScript
+        const heroArea = document.getElementById('hero');
+        let lastX = 0;
+        let lastY = 0;
+        const distanceThreshold = 60; 
+
+        // 今回は画面全体(document)ではなく、波紋エリア(heroArea)の上でだけ波紋を出すように変更
+        heroArea.addEventListener('mousemove', function(e) {
+            // スクロール時のズレを防ぐため、e.pageX/e.pageY を使用
+            const currentX = e.pageX;
+            const currentY = e.pageY;
+            
+            const diffX = currentX - lastX;
+            const diffY = currentY - lastY;
+            const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+
+            if (distance < distanceThreshold) {
+                return;
+            }
+
+            lastX = currentX;
+            lastY = currentY;
+
+            createRipple(currentX, currentY, 'ripple');
+
+            setTimeout(() => {
+                createRipple(currentX, currentY, 'ripple inner');
+            }, 150);
+        });
+
+        function createRipple(x, y, className) {
+            const ripple = document.createElement('div');
+            ripple.className = className;
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            // bodyではなく、heroAreaの中に波紋を作るように変更
+            heroArea.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.remove();
+            }, 2500);
+        }
+
+        // ソーシャルボタン共通テンプレート制御
+        const socialFloatArea = document.querySelector('.social-float-area');
+        const leafItems = Array.from(document.querySelectorAll('.social-button-item'));
+        const leafMotionState = [];
+        let leafAnimationFrame = null;
+
+        function openPopup(selector) {
+            const popup = document.querySelector(selector);
+            if (!popup) {
+                return;
+            }
+            popup.classList.add('is-open');
+            popup.setAttribute('aria-hidden', 'false');
+        }
+
+        function closePopup(popupElement) {
+            popupElement.classList.remove('is-open');
+            popupElement.setAttribute('aria-hidden', 'true');
+        }
+
+        function initializeLeafMotion() {
+            if (!socialFloatArea || leafItems.length === 0) {
+                return;
+            }
+
+            const areaRect = heroArea.getBoundingClientRect();
+            const buttonSize = 58;
+            const maxX = Math.max(areaRect.width - buttonSize, 0);
+            const maxY = Math.max(areaRect.height - buttonSize, 0);
+
+            leafItems.forEach(function (item, index) {
+                const existing = leafMotionState[index];
+                if (existing) {
+                    existing.maxX = maxX;
+                    existing.maxY = maxY;
+                    return;
+                }
+
+                const initialX = index === 0 ? areaRect.width * 0.18 : areaRect.width * 0.68;
+                const initialY = index === 0 ? areaRect.height * 0.24 : areaRect.height * 0.66;
+                const baseSpeedX = index === 0 ? 0.1 : -0.1;
+                const baseSpeedY = index === 0 ? 0.1 : -0.1;
+                /*const baseSpeedX = index === 0 ? 0.85 : -0.95;
+                const baseSpeedY = index === 0 ? 0.55 : -0.68;*/
+
+                leafMotionState[index] = {
+                    x: Math.min(Math.max(initialX, 0), maxX),
+                    y: Math.min(Math.max(initialY, 0), maxY),
+                    vx: baseSpeedX,
+                    vy: baseSpeedY,
+                    wobble: index === 0 ? 0 : Math.PI / 2,
+                    maxX,
+                    maxY
+                };
+                item.style.transform = `translate(${leafMotionState[index].x}px, ${leafMotionState[index].y}px) rotate(0deg)`;
+            });
+        }
+
+        function animateLeafMotion() {
+            if (!socialFloatArea || leafItems.length === 0) {
+                return;
+            }
+
+            const areaRect = heroArea.getBoundingClientRect();
+            const buttonSize = window.innerWidth <= 700 ? 50 : 58;
+            const maxX = Math.max(areaRect.width - buttonSize, 0);
+            const maxY = Math.max(areaRect.height - buttonSize, 0);
+            const time = performance.now() * 0.001;
+
+            leafItems.forEach(function (item, index) {
+                const state = leafMotionState[index];
+                if (!state) {
+                    return;
+                }
+
+                if (state.maxX !== maxX || state.maxY !== maxY) {
+                    state.maxX = maxX;
+                    state.maxY = maxY;
+                    state.x = Math.min(Math.max(state.x, 0), maxX);
+                    state.y = Math.min(Math.max(state.y, 0), maxY);
+                }
+
+                state.x += state.vx;
+                state.y += state.vy;
+
+                const sway = Math.sin(time * 0.6 + state.wobble + index) * 0.003;
+                state.vx += sway * 0.03;
+                state.vy += Math.cos(time * 0.5 + state.wobble + index) * 0.002;
+
+                const bounceKick = 0.8;
+
+                if (state.x <= 0) {
+                    state.x = 0;
+                    state.vx = Math.max(Math.abs(state.vx), bounceKick);
+                } else if (state.x >= maxX) {
+                    state.x = maxX;
+                    state.vx = -Math.max(Math.abs(state.vx), bounceKick);
+                }
+
+                if (state.y <= 0) {
+                    state.y = 0;
+                    state.vy = Math.max(Math.abs(state.vy), bounceKick);
+                } else if (state.y >= maxY) {
+                    state.y = maxY;
+                    state.vy = -Math.max(Math.abs(state.vy), bounceKick);
+                }
+
+                state.vx += Math.sin(time * 0.1 + index * 1.7) *0.002;
+                state.vy += Math.cos(time * 0.1 + index * 1.3) * 0.0015;
+
+                const speedLimit = 0.9;
+                state.vx = Math.max(Math.min(state.vx, speedLimit), -speedLimit);
+                state.vy = Math.max(Math.min(state.vy, speedLimit), -speedLimit);
+
+                const driftAngle = Math.sin(time * 1.2 + index) * 10 + (state.vx >= 0 ? 1 : -1) * 6;
+                item.style.transform = `translate(${state.x}px, ${state.y}px) rotate(${driftAngle}deg)`;
+            });
+
+            leafAnimationFrame = window.requestAnimationFrame(animateLeafMotion);
+        }
+
+        initializeLeafMotion();
+        leafAnimationFrame = window.requestAnimationFrame(animateLeafMotion);
+
+        window.addEventListener('resize', function () {
+            initializeLeafMotion();
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (leafAnimationFrame) {
+                    window.cancelAnimationFrame(leafAnimationFrame);
+                    leafAnimationFrame = null;
+                }
+                return;
+            }
+
+            if (!leafAnimationFrame) {
+                leafAnimationFrame = window.requestAnimationFrame(animateLeafMotion);
+            }
+        });
+
+        if (socialFloatArea) {
+            socialFloatArea.addEventListener('click', function (event) {
+                const button = event.target.closest('.social-action-btn');
+                if (!button) {
+                    return;
+                }
+
+                const actionType = button.dataset.type;
+                const target = button.dataset.target;
+
+                if (actionType === 'popup' && target) {
+                    openPopup(target);
+                }
+
+                if (actionType === 'link' && target) {
+                    window.open(target, '_blank', 'noopener,noreferrer');
+                }
+            });
+
+            socialFloatArea.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                const button = event.target.closest('.social-action-btn');
+                if (!button) {
+                    return;
+                }
+
+                event.preventDefault();
+                button.click();
+            });
+        }
+
+        document.querySelectorAll('.popup-overlay').forEach(function (popup) {
+            popup.addEventListener('click', function (event) {
+                const clickedClose = event.target.closest('.popup-close-btn');
+                if (clickedClose || event.target === popup) {
+                    closePopup(popup);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            document.querySelectorAll('.popup-overlay.is-open').forEach(function (popup) {
+                closePopup(popup);
+            });
+        });
+    </script>
+</body>
+</html>
